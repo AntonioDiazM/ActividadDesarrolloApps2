@@ -7,9 +7,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
@@ -36,13 +38,17 @@ import androidx.compose.ui.unit.dp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(
-    onRegisterSuccess: (String, String, String) -> Unit,
+    onRegisterSuccess: (String, String, String, String, String) -> Unit,
     onBackToLoginClick: () -> Unit
 ) {
     var nombre by remember { mutableStateOf("") }
     var correo by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var telefono by remember { mutableStateOf("") }
+    var dni by remember { mutableStateOf("") }
+    var mensajeError by remember { mutableStateOf( "") }
     var passwordVisible by remember { mutableStateOf(false) }
+    var showErrors by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -78,6 +84,35 @@ fun RegisterScreen(
                 leadingIcon = {
                     Icon(imageVector = Icons.Default.Person, contentDescription = null)
                 },
+                isError = showErrors && nombre.isBlank(),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            OutlinedTextField(
+                value = telefono,
+                onValueChange = { telefono = it },
+                label = { Text("Telefono") },
+                singleLine = true,
+                leadingIcon = {
+                    Icon(imageVector = Icons.Default.Phone, contentDescription = null)
+                },
+                isError = showErrors && telefono.isBlank(),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            OutlinedTextField(
+                value = dni,
+                onValueChange = { dni = it },
+                label = { Text("Documento de identidad ") },
+                singleLine = true,
+                leadingIcon = {
+                    Icon(imageVector = Icons.Default.CreditCard, contentDescription = null)
+                },
+                isError = showErrors && dni.isBlank(),
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -87,12 +122,13 @@ fun RegisterScreen(
             OutlinedTextField(
                 value = correo,
                 onValueChange = { correo = it },
-                label = { Text("Correo o teléfono") },
+                label = { Text("Correo ") },
                 singleLine = true,
                 leadingIcon = {
                     Icon(imageVector = Icons.Default.Email, contentDescription = null)
                 },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                isError = showErrors && correo.isBlank(),
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -115,14 +151,32 @@ fun RegisterScreen(
                 },
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                isError = showErrors && password.isBlank(),
                 modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(modifier = Modifier.height(32.dp))
 
+            if (mensajeError.isNotEmpty()) {
+                Text(
+                    text = mensajeError,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+            }
+
             // ---------- BOTÓN: Crear cuenta ----------
             Button(
-                onClick = { onRegisterSuccess(nombre, correo, password) },
+                onClick = {
+                    showErrors = true
+                    if (nombre.isBlank() || correo.isBlank() || telefono.isBlank() || password.isBlank() || dni.isBlank()) {
+                        mensajeError = "Todos los campos son obligatorios"
+                    } else {
+                        mensajeError = ""
+                        onRegisterSuccess(nombre, telefono, dni, correo, password)
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
